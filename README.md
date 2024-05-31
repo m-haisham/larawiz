@@ -14,7 +14,7 @@ This script automates the setup process for a Laravel application on an Ubuntu s
 1. Download and execute the script directly from GitHub:
 
    ```bash
-   sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/your-username/Larawiz/main/setup.sh)"
+   sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/m-haisham/larawiz/v0.1.0/setup.sh)"
    ```
 
 2. Follow the prompts to provide necessary inputs such as SSH key, GitHub repository URL, and domain name.
