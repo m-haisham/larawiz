@@ -2,7 +2,8 @@
 
 # Ensure the script is run with sudo
 if [ "$EUID" -ne 0 ]; then
-    echo "Please run as root (use sudo)"
+    echo "This script requires root privileges to install packages and configure system settings."
+    echo "Please run the script with sudo."
     exit 1
 fi
 
@@ -19,11 +20,10 @@ validate_input() {
     fi
 }
 
-# Prompt for alert email
+# Prompt for all inputs
 prompt "Enter your email address for alerts" ALERT_EMAIL
 validate_input "Alert email" "ALERT_EMAIL"
 
-# Prompt for all inputs
 prompt "Enter the SSH key for user 'it'" SSH_KEY
 validate_input "SSH key" "SSH_KEY"
 
