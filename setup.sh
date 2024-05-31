@@ -130,7 +130,7 @@ echo "Cloning the Laravel project from GitHub..."
 sudo -u it sudo -u it git clone "$LARAVEL_REPO_URL" "$PROJECT_FOLDER"
 
 echo "Installing Laravel dependencies..."
-sudo -u it cd "$PROJECT_FOLDER" && sudo -u it composer install
+sudo -u it cd "$PROJECT_FOLDER" && sudo -u it composer install --no-dev -o
 
 echo "Setting permissions for www-data..."
 sudo chown -R www-data:www-data "$PROJECT_FOLDER"

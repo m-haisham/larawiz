@@ -14,7 +14,7 @@ This script automates the setup process for a Laravel application on an Ubuntu s
 1. Download and execute the script directly from GitHub:
 
    ```bash
-   sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/m-haisham/larawiz/v0.1.0/setup.sh)"
+   sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/m-haisham/larawiz/v0.1.1/setup.sh)"
    ```
 
 2. Follow the prompts to provide necessary inputs such as SSH key, GitHub repository URL, and domain name.
@@ -22,7 +22,7 @@ This script automates the setup process for a Laravel application on an Ubuntu s
 ## What Does This Script Do?
 
 - Updates and upgrades the system
-- Installs required dependencies (Nginx, Git, Composer, PHP 8.3, Supervisor, Certbot)
+- Installs required dependencies (Nginx, Git, Composer, PHP 8.3, Supervisor, Certbot, Npm)
 - Creates a new user and sets up SSH key authentication
 - Clones the Laravel project from the specified GitHub repository
 - Installs Laravel dependencies using Composer
