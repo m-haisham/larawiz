@@ -191,13 +191,13 @@ echo "Configuring Supervisor for Laravel queues..."
 sudo -u it sudo tee "/etc/supervisor/conf.d/$DOMAIN_NAME-queue.conf" >/dev/null <<EOL
 [program:queue]
 process_name=%(program_name)s_%(process_num)02d
-command=php $PROJECT_FOLDER/artisan queue:work --sleep=3 --tries=3 --timeout=90
+command=cd $PROJECT_FOLDER && php artisan queue:work --sleep=3 --tries=3 --timeout=90
 autostart=true
 autorestart=true
 user=www-data
 numprocs=1
 redirect_stderr=true
-stdout_logfile=$PROJECT_FOLDER/storage/logs/worker.log
+stdout_logfile=$PROJECT_FOLDER/storage/logs/queue.log
 EOL
 
 echo "Reloading Supervisor to apply new configuration..."
