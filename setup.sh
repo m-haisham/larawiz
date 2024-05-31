@@ -7,9 +7,13 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-# Function to prompt for input
+# Function to prompt for input or use environment variable
 prompt() {
-    read -p "$1: " $2
+    if [ -n "${!2}" ]; then
+        echo "$1: ${!2}"
+    else
+        read -p "$1: " $2
+    fi
 }
 
 # Validate non-empty input
@@ -20,7 +24,7 @@ validate_input() {
     fi
 }
 
-# Prompt for all inputs
+# Prompt for all inputs or use environment variables
 prompt "Enter your email address for alerts" ALERT_EMAIL
 validate_input "Alert email" "ALERT_EMAIL"
 
