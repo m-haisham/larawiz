@@ -69,6 +69,25 @@ else
     echo "Composer is already installed."
 fi
 
+# Install NVM, npm, and Node.js
+if ! command -v nvm >/dev/null 2>&1; then
+    echo "Installing NVM (Node Version Manager)..."
+    sudo -u it curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+    echo "Reloading bash to use NVM..."
+    source /home/it/.bashrc
+else
+    echo "NVM (Node Version Manager) is already installed."
+fi
+
+if ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1; then
+    echo "Installing the latest LTS version of Node.js and npm..."
+    sudo -u it nvm install --lts
+    sudo -u it nvm use --lts
+    sudo -u it nvm alias default node
+else
+    echo "Node.js and npm are already installed."
+fi
+
 # Check if user 'it' exists
 if id "it" &>/dev/null; then
     echo "User 'it' already exists."
