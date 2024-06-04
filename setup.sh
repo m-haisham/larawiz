@@ -32,9 +32,6 @@ validate_input() {
 prompt "Enter your email address for alerts" ALERT_EMAIL
 validate_input "Alert email" "ALERT_EMAIL"
 
-prompt "Enter the SSH key for user 'it'" SSH_KEY
-validate_input "SSH key" "SSH_KEY"
-
 prompt "Enter your GitHub repository URL (e.g., git@github.com:username/repo.git)" LARAVEL_REPO_URL
 validate_input "GitHub repository URL" "LARAVEL_REPO_URL"
 
@@ -121,10 +118,27 @@ else
     sudo adduser --disabled-password --gecos "" it
     echo "it:$IT_PASSWORD" | sudo chpasswd
     sudo usermod -aG sudo it
+
+    # Flag indicating 'it' user has just been created
+    JUST_CREATED_IT=true
+fi
+
+# Check if the SSH directory exists for the 'it' user
+if [ ! -d "/home/it/.ssh" ]; then
+    echo "Creating .ssh directory for user 'it'..."
     sudo -u it mkdir -p /home/it/.ssh
-    sudo -u it echo "$SSH_KEY" >/home/it/.ssh/authorized_keys
-    sudo -u it chmod 600 /home/it/.ssh/authorized_keys
+fi
+
+# Copy SSH authorized keys from current user to the 'it' user if 'it' user was just created
+if [ "$JUST_CREATED_IT" = true ]; then
+    echo "Copying SSH authorized keys to user 'it'..."
+    sudo cp ~/.ssh/authorized_keys /home/it/.ssh/
+    sudo chown it:it /home/it/.ssh/authorized_keys
+    sudo chmod 600 /home/it/.ssh/authorized_keys
+
+    # Print information about the password and SSH key
     echo "Password for user 'it' is: $IT_PASSWORD"
+    echo "SSH keys copied to user 'it'."
 fi
 
 echo "Setting up firewall with UFW..."
@@ -144,6 +158,7 @@ fi
 
 echo "SSH public key for GitHub:"
 sudo -u it cat "$SSH_KEY_FILE.pub"
+echo ""
 
 echo "Add this key to your GitHub account: https://github.com/settings/keys"
 if [[ "${SKIP_INPUT,,}" != "true" ]]; then
