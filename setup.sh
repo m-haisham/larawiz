@@ -69,71 +69,11 @@ validate_input "Domain name" "DOMAIN_NAME"
 PROJECT_FOLDER="/var/www/$DOMAIN_NAME"
 
 echo "Updating and upgrading the system..."
-sudo -u it sudo apt update -y
-sudo -u it sudo apt upgrade -y
+sudo apt update -y
+sudo apt upgrade -y
 
 echo "Installing required dependencies..."
-sudo -u it sudo apt install -y nginx git unzip curl software-properties-common supervisor python3-certbot-nginx ufw
-
-if command -v php >/dev/null 2>&1; then
-    installed_version=$(php -v | head -n 1 | awk '{print $2}')
-    echo "PHP version $installed_version is installed."
-    if [[ "$installed_version" != "8.3"* ]]; then
-        echo "Another version of PHP is installed. Please uninstall the current PHP version first:"
-        echo "    sudo apt remove --purge php*"
-        echo "    sudo apt autoremove"
-        echo "    sudo apt autoclean"
-        exit 1
-    fi
-else
-    echo "No PHP installation detected. Proceeding with PHP 8.3 installation..."
-fi
-
-# Install PHP 8.3
-if ! command -v php >/dev/null 2>&1; then
-    echo "Adding PHP repository and installing PHP 8.3 and extensions..."
-    sudo -u it sudo add-apt-repository ppa:ondrej/php -y
-    sudo -u it sudo apt update -y
-    sudo -u it sudo apt install -y php8.3 php8.3-cli php8.3-fpm php8.3-mysql php8.3-xml php8.3-mbstring php8.3-curl php8.3-zip php8.3-bcmath php8.3-intl
-else
-    echo "PHP 8.3 is already installed."
-fi
-
-# Install Certbot if not installed
-if ! command -v certbot >/dev/null 2>&1; then
-    echo "Installing Certbot..."
-    sudo -u it sudo apt install -y certbot
-else
-    echo "Certbot is already installed."
-fi
-
-# Check if Composer is installed
-if ! command -v composer >/dev/null 2>&1; then
-    echo "Installing Composer..."
-    sudo -u it sudo curl -sS https://getcomposer.org/installer | sudo -u it sudo php
-    sudo -u it sudo mv composer.phar /usr/local/bin/composer
-else
-    echo "Composer is already installed."
-fi
-
-# Install NVM, npm, and Node.js
-if ! command -v nvm >/dev/null 2>&1; then
-    echo "Installing NVM (Node Version Manager)..."
-    sudo -u it curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
-    echo "Reloading bash to use NVM..."
-    source /home/it/.bashrc
-else
-    echo "NVM (Node Version Manager) is already installed."
-fi
-
-if ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1; then
-    echo "Installing the latest LTS version of Node.js and npm..."
-    sudo -u it nvm install --lts
-    sudo -u it nvm use --lts
-    sudo -u it nvm alias default node
-else
-    echo "Node.js and npm are already installed."
-fi
+sudo apt install -y curl openssl nginx git unzip software-properties-common supervisor python3-certbot-nginx ufw iproute2
 
 # Check if user 'it' exists
 if id "it" &>/dev/null; then
@@ -170,9 +110,75 @@ if [ "$JUST_CREATED_IT" = true ]; then
 fi
 
 echo "Setting up firewall with UFW..."
-sudo -u it sudo ufw allow OpenSSH
-sudo -u it sudo ufw allow 'Nginx Full'
-sudo -u it sudo ufw --force enable
+sudo ufw allow OpenSSH
+sudo ufw allow 'Nginx Full'
+sudo ufw --force enable
+
+# if command -v php8.3 >/dev/null 2>&1; then
+#     installed_version=$(php -v | head -n 1 | awk '{print $2}')
+#     echo "PHP version $installed_version is installed."
+#     if [[ "$installed_version" != "8.3"* ]]; then
+#         echo "Another version of PHP is installed. Please uninstall the current PHP version first:"
+#         echo "    sudo apt remove --purge php*"
+#         echo "    sudo apt autoremove"
+#         echo "    sudo apt autoclean"
+#         exit 1
+#     fi
+# else
+#     echo "No PHP installation detected. Proceeding with PHP 8.3 installation..."
+# fi
+
+# Install PHP 8.3
+if ! command -v php8.3 >/dev/null 2>&1; then
+    echo "Adding PHP repository and installing PHP 8.3 and extensions..."
+    sudo add-apt-repository ppa:ondrej/php -y
+    sudo apt update -y
+    sudo apt install -y php8.3 php8.3-cli php8.3-fpm php8.3-mysql php8.3-xml php8.3-mbstring php8.3-curl php8.3-zip php8.3-bcmath php8.3-intl
+    sudo update-alternatives --set php /usr/bin/php8.3
+else
+    echo "PHP 8.3 is already installed."
+fi
+
+# Install Certbot if not installed
+if ! command -v certbot >/dev/null 2>&1; then
+    echo "Installing Certbot..."
+    sudo -u it apt install -y certbot
+else
+    echo "Certbot is already installed."
+fi
+
+# Check if Composer is installed
+if ! command -v composer >/dev/null 2>&1; then
+    echo "Installing Composer..."
+    sudo -u it curl -sS https://getcomposer.org/installer | sudo -u it php
+    sudo -u it mv composer.phar /usr/local/bin/composer
+else
+    echo "Composer is already installed."
+fi
+
+# Install NVM, npm, and Node.js
+if ! command -v nvm >/dev/null 2>&1; then
+    echo "Installing NVM (Node Version Manager)..."
+    sudo -u it curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+    echo "Copying NVM configuration to 'it' user..."
+    sudo cp ~/.nvm /home/it/ -r
+    sudo chown it:it /home/it/.nvm -R
+    echo "Reloading bash to use NVM..."
+    export NVM_DIR="/home/it/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && sudo -u it \. "$NVM_DIR/nvm.sh"
+    [ -s "$NVM_DIR/bash_completion" ] && sudo -u it \. "$NVM_DIR/bash_completion"
+else
+    echo "NVM (Node Version Manager) is already installed."
+fi
+
+if ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1; then
+    echo "Installing the latest LTS version of Node.js and npm..."
+    sudo -u it nvm install --lts
+    sudo -u it nvm use --lts
+    sudo -u it nvm alias default node
+else
+    echo "Node.js and npm are already installed."
+fi
 
 SSH_DIR="/home/it/.ssh"
 SSH_KEY_PRIVATE_FILE="$SSH_DIR/id_ed25519"
@@ -195,7 +201,7 @@ else
 
     # Display the SSH key for the user to copy
     echo "SSH public key for GitHub:"
-    sudo -u it cat "$SSH_KEY_FILE.pub"
+    sudo -u it cat "$SSH_KEY_PUBLIC_FILE.pub"
     echo ""
 
     # Prompt the user to add the SSH key to GitHub
@@ -206,10 +212,10 @@ else
 fi
 
 echo "Cloning the Laravel project from GitHub..."
-sudo -u it sudo -u it git clone "$LARAVEL_REPO_URL" "$PROJECT_FOLDER"
+sudo -u it -u it git clone "$LARAVEL_REPO_URL" "$PROJECT_FOLDER"
 
 echo "Installing Laravel dependencies..."
-sudo -u it cd "$PROJECT_FOLDER" && sudo -u it composer install --no-dev -o
+cd "$PROJECT_FOLDER" && sudo -u it composer install --no-dev -o
 
 echo "Setting permissions for www-data..."
 sudo chown -R www-data:www-data "$PROJECT_FOLDER"
@@ -221,7 +227,7 @@ sudo -u www-data sudo php "$PROJECT_FOLDER/artisan" key:generate
 
 echo "Configuring Nginx..."
 NGINX_CONF="/etc/nginx/sites-available/$DOMAIN_NAME"
-sudo -u it sudo tee $NGINX_CONF >/dev/null <<EOL
+sudo -u it tee $NGINX_CONF >/dev/null <<EOL
 server {
     listen 80;
     server_name $DOMAIN_NAME;
@@ -260,14 +266,14 @@ server {
 EOL
 
 # Configuring Certbot for HTTPS...
-sudo -u it sudo certbot --nginx -d $DOMAIN_NAME -n --agree-tos --email $ALERT_EMAIL
+sudo -u it certbot --nginx -d $DOMAIN_NAME -n --agree-tos --email $ALERT_EMAIL
 
 echo "Enabling Nginx site and restarting service..."
-sudo -u it sudo ln -s $NGINX_CONF /etc/nginx/sites-enabled/
-sudo -u it sudo systemctl restart nginx
+sudo -u it ln -s $NGINX_CONF /etc/nginx/sites-enabled/
+sudo -u it systemctl restart nginx
 
 echo "Configuring Supervisor for Laravel queues..."
-sudo -u it sudo tee "/etc/supervisor/conf.d/$DOMAIN_NAME-queue.conf" >/dev/null <<EOL
+sudo -u it tee "/etc/supervisor/conf.d/$DOMAIN_NAME-queue.conf" >/dev/null <<EOL
 [program:queue]
 process_name=%(program_name)s_%(process_num)02d
 command=cd $PROJECT_FOLDER && php artisan queue:work --sleep=3 --tries=3 --timeout=90
@@ -280,9 +286,9 @@ stdout_logfile=$PROJECT_FOLDER/storage/logs/queue.log
 EOL
 
 echo "Reloading Supervisor to apply new configuration..."
-sudo -u it sudo supervisorctl reread
-sudo -u it sudo supervisorctl update
-sudo -u it sudo supervisorctl start queue:*
+sudo -u it supervisorctl reread
+sudo -u it supervisorctl update
+sudo -u it supervisorctl start queue:*
 
 echo "Adding Laravel Scheduler to Crontab..."
 (
