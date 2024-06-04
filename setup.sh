@@ -1,5 +1,31 @@
 #!/bin/bash
 
+###############################################################################
+# Description:
+#   This script automates the setup process for a Laravel application on a
+#   Ubuntu server, including installing dependencies, configuring Nginx,
+#   setting up SSL certificates, configuring Supervisor for queue processing,
+#   and more.
+#
+#   Before running this script, ensure the following environment variables are
+#   set or provided as input during execution:
+#
+#   - ALERT_EMAIL: Your email address for receiving alerts.
+#   - LARAVEL_REPO_URL: The URL of your Laravel application repository on GitHub.
+#   - DOMAIN_NAME: The domain name for configuring Nginx.
+#
+#   Optionally, you can set the following environment variable to skip input
+#   prompts and use predefined values:
+#
+#   - SKIP_INPUT: Set to "true" to skip input prompts.
+#
+# Usage:
+#   sudo ./setup_laravel.sh
+#
+# Note:
+#   This script must be run with root privileges.
+###############################################################################
+
 # Ensure the script is run with sudo
 if [ "$EUID" -ne 0 ]; then
     echo "This script requires root privileges to install packages and configure system settings."

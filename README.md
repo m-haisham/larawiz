@@ -9,6 +9,18 @@ This script automates the setup process for a Laravel application on an Ubuntu s
 - GitHub repository URL of the Laravel project
 - Domain name for the application
 
+## Environment Variables
+
+Before running the Larawiz script, ensure the following environment variables are set or provided as input during execution:
+
+- `ALERT_EMAIL`: Your email address for receiving alerts.
+- `LARAVEL_REPO_URL`: The URL of your Laravel application repository on GitHub.
+- `DOMAIN_NAME`: The domain name for configuring Nginx.
+
+Optionally, you can set the following environment variable to skip input prompts and use predefined values:
+
+- `SKIP_INPUT`: Set to "true" to skip input prompts.
+
 ## Usage
 
 1. Download and execute the script directly from GitHub:
