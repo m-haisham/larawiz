@@ -9,6 +9,10 @@ fi
 
 # Function to prompt for input or use environment variable
 prompt() {
+    if [[ "${SKIP_INPUT,,}" != "true" ]]; then
+        return 0
+    fi
+
     if [ -n "${!2}" ]; then
         echo "$1: ${!2}"
     else
@@ -142,7 +146,9 @@ echo "SSH public key for GitHub:"
 sudo -u it cat "$SSH_KEY_FILE.pub"
 
 echo "Add this key to your GitHub account: https://github.com/settings/keys"
-read -p "Press [Enter] after adding the SSH key to GitHub..."
+if [[ "${SKIP_INPUT,,}" != "true" ]]; then
+    read -p "Press [Enter] after adding the SSH key to GitHub..."
+fi
 
 echo "Cloning the Laravel project from GitHub..."
 sudo -u it sudo -u it git clone "$LARAVEL_REPO_URL" "$PROJECT_FOLDER"
