@@ -46,8 +46,22 @@ sudo -u it sudo apt upgrade -y
 echo "Installing required dependencies..."
 sudo -u it sudo apt install -y nginx git unzip curl software-properties-common supervisor python3-certbot-nginx ufw
 
+if command -v php >/dev/null 2>&1; then
+    installed_version=$(php -v | head -n 1 | awk '{print $2}')
+    echo "PHP version $installed_version is installed."
+    if [[ "$installed_version" != "8.3"* ]]; then
+        echo "Another version of PHP is installed. Please uninstall the current PHP version first:"
+        echo "    sudo apt remove --purge php*"
+        echo "    sudo apt autoremove"
+        echo "    sudo apt autoclean"
+        exit 1
+    fi
+else
+    echo "No PHP installation detected. Proceeding with PHP 8.3 installation..."
+fi
+
 # Install PHP 8.3
-if ! command -v php8.3 >/dev/null 2>&1; then
+if ! command -v php >/dev/null 2>&1; then
     echo "Adding PHP repository and installing PHP 8.3 and extensions..."
     sudo -u it sudo add-apt-repository ppa:ondrej/php -y
     sudo -u it sudo apt update -y
