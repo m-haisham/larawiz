@@ -18,6 +18,8 @@
 #   prompts and use predefined values:
 #
 #   - SKIP_INPUT: Set to "true" to skip input prompts.
+#   - SSH_KEY_PRIVATE: The private SSH key for accessing GitHub repositories.
+#   - SSH_KEY_PUBLIC: The public SSH key for accessing GitHub repositories.
 #
 # Usage:
 #   sudo ./setup_laravel.sh
@@ -173,22 +175,34 @@ sudo -u it sudo ufw allow 'Nginx Full'
 sudo -u it sudo ufw --force enable
 
 SSH_DIR="/home/it/.ssh"
-SSH_KEY_FILE="$SSH_DIR/id_ed25519"
-# Check if SSH key already exists
-if [ -f "$SSH_KEY_FILE" ]; then
+SSH_KEY_PRIVATE_FILE="$SSH_DIR/id_ed25519"
+SSH_KEY_PUBLIC_FILE="$SSH_KEY_PRIVATE_FILE.pub"
+
+# Check if SSH key already exists or provided via environment variable
+if [ -f "$SSH_KEY_PRIVATE_FILE" ]; then
     echo "SSH key already exists."
+elif [ -n "${SSH_KEY_PRIVATE}" ] && [ -n "${SSH_KEY_PUBLIC}" ]; then
+    echo "Using provided SSH key..."
+    echo "${SSH_KEY_PRIVATE}" >"$SSH_KEY_PRIVATE_FILE"
+    echo "${SSH_KEY_PUBLIC}" >"$SSH_KEY_PUBLIC_FILE"
+    sudo chown it:it "$SSH_KEY_PRIVATE_FILE" "$SSH_KEY_PUBLIC_FILE"
+    sudo chmod 600 "$SSH_KEY_PRIVATE_FILE"
+    echo "SSH key saved to $SSH_KEY_PRIVATE_FILE and $SSH_KEY_PUBLIC_FILE."
 else
+    # Generate an SSH key if it doesn't exist
     echo "Generating an ED25519 SSH key for GitHub..."
-    sudo -u it sudo -u it ssh-keygen -t ed25519 -f "$SSH_KEY_FILE" -N ""
-fi
+    sudo -u it ssh-keygen -t ed25519 -f "$SSH_KEY_PRIVATE_FILE" -N ""
 
-echo "SSH public key for GitHub:"
-sudo -u it cat "$SSH_KEY_FILE.pub"
-echo ""
+    # Display the SSH key for the user to copy
+    echo "SSH public key for GitHub:"
+    sudo -u it cat "$SSH_KEY_FILE.pub"
+    echo ""
 
-echo "Add this key to your GitHub account: https://github.com/settings/keys"
-if [[ "${SKIP_INPUT,,}" != "true" ]]; then
-    read -p "Press [Enter] after adding the SSH key to GitHub..."
+    # Prompt the user to add the SSH key to GitHub
+    echo "Add this key to your GitHub account: https://github.com/settings/keys"
+    if [[ "${SKIP_INPUT,,}" != "true" ]]; then
+        read -p "Press [Enter] after adding the SSH key to GitHub..."
+    fi
 fi
 
 echo "Cloning the Laravel project from GitHub..."

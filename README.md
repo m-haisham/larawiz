@@ -20,6 +20,8 @@ Before running the Larawiz script, ensure the following environment variables ar
 Optionally, you can set the following environment variable to skip input prompts and use predefined values:
 
 - `SKIP_INPUT`: Set to "true" to skip input prompts.
+- `SSH_KEY_PRIVATE`: The private SSH key for accessing GitHub repositories.
+- `SSH_KEY_PUBLIC`: The public SSH key for accessing GitHub repositories.
 
 ## Usage
 
