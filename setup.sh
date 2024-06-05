@@ -18,6 +18,7 @@
 #   prompts and use predefined values:
 #
 #   - SKIP_INPUT: Set to "true" to skip input prompts.
+#   - SKIP_PASSWORD: Set to "true" to skip password generation.
 #   - SSH_KEY_PRIVATE: The private SSH key for accessing GitHub repositories.
 #   - SSH_KEY_PUBLIC: The public SSH key for accessing GitHub repositories.
 #
@@ -73,19 +74,26 @@ sudo apt update -y
 sudo apt upgrade -y
 
 echo "Installing required dependencies..."
-sudo apt install -y curl openssl nginx git unzip software-properties-common supervisor python3-certbot-nginx ufw iproute2
+sudo apt install -y curl openssl nginx git unzip software-properties-common supervisor python3-certbot-nginx ufw iproute2 cron systemd
 
 # Check if user 'it' exists
 if id "it" &>/dev/null; then
     echo "User 'it' already exists."
 else
     echo "Creating user 'it' and setting up SSH key..."
-    # Generate a random password
-    IT_PASSWORD=$(openssl rand -base64 12 | tr -dc '[:alnum:]!@#$%^&*()_+-=' | head -c 12)
     # Create the user with the generated password
     sudo adduser --disabled-password --gecos "" it
-    echo "it:$IT_PASSWORD" | sudo chpasswd
+
+    # Set the password for the 'it' user
+    if [[ "${SKIP_INPUT,,}" != "true" ]]; then
+        IT_PASSWORD=$(openssl rand -base64 12 | tr -dc '[:alnum:]!@#$%^&*()_+-=' | head -c 12)
+        echo "it:$IT_PASSWORD" | sudo chpasswd
+        echo "Password for user 'it' is: $IT_PASSWORD"
+    fi
+
+    # Add 'it' user to the sudo group
     sudo usermod -aG sudo it
+    sudo usermod -aG www-data it
 
     # Flag indicating 'it' user has just been created
     JUST_CREATED_IT=true
@@ -97,16 +105,19 @@ if [ ! -d "/home/it/.ssh" ]; then
     sudo -u it mkdir -p /home/it/.ssh
 fi
 
-# Copy SSH authorized keys from current user to the 'it' user if 'it' user was just created
 if [ "$JUST_CREATED_IT" = true ]; then
     echo "Copying SSH authorized keys to user 'it'..."
-    sudo cp ~/.ssh/authorized_keys /home/it/.ssh/
-    sudo chown it:it /home/it/.ssh/authorized_keys
-    sudo chmod 600 /home/it/.ssh/authorized_keys
 
-    # Print information about the password and SSH key
-    echo "Password for user 'it' is: $IT_PASSWORD"
-    echo "SSH keys copied to user 'it'."
+    # Check if authorized_keys file exists
+    if [ -f ~/.ssh/authorized_keys ]; then
+        sudo cp ~/.ssh/authorized_keys /home/it/.ssh/
+        sudo chown it:it /home/it/.ssh/authorized_keys
+        sudo chmod 600 /home/it/.ssh/authorized_keys
+
+        echo "SSH keys copied to user 'it'."
+    else
+        echo "No authorized_keys file found for the current user."
+    fi
 fi
 
 echo "Setting up firewall with UFW..."
@@ -165,8 +176,8 @@ if ! command -v nvm >/dev/null 2>&1; then
     sudo chown it:it /home/it/.nvm -R
     echo "Reloading bash to use NVM..."
     export NVM_DIR="/home/it/.nvm"
-    [ -s "$NVM_DIR/nvm.sh" ] && sudo -u it \. "$NVM_DIR/nvm.sh"
-    [ -s "$NVM_DIR/bash_completion" ] && sudo -u it \. "$NVM_DIR/bash_completion"
+    [ -s "$NVM_DIR/nvm.sh" ] && sudo -u it . "$NVM_DIR/nvm.sh"
+    [ -s "$NVM_DIR/bash_completion" ] && sudo -u it . "$NVM_DIR/bash_completion"
 else
     echo "NVM (Node Version Manager) is already installed."
 fi
@@ -212,7 +223,7 @@ else
 fi
 
 echo "Cloning the Laravel project from GitHub..."
-sudo -u it -u it git clone "$LARAVEL_REPO_URL" "$PROJECT_FOLDER"
+sudo -u it git clone "$LARAVEL_REPO_URL" "$PROJECT_FOLDER"
 
 echo "Installing Laravel dependencies..."
 cd "$PROJECT_FOLDER" && sudo -u it composer install --no-dev -o
@@ -223,7 +234,7 @@ sudo chmod -R 775 "$PROJECT_FOLDER/storage" "$PROJECT_FOLDER/bootstrap/cache"
 
 echo "Setting up environment file..."
 sudo cp "$PROJECT_FOLDER/.env.example" "$PROJECT_FOLDER/.env"
-sudo -u www-data sudo php "$PROJECT_FOLDER/artisan" key:generate
+sudo -u it sudo php "$PROJECT_FOLDER/artisan" key:generate
 
 echo "Configuring Nginx..."
 NGINX_CONF="/etc/nginx/sites-available/$DOMAIN_NAME"

@@ -26,6 +26,7 @@ docker run --rm --name $CONTAINER_NAME \
     -e LARAVEL_REPO_URL="$LARAVEL_REPO_URL" \
     -e DOMAIN_NAME="$DOMAIN_NAME" \
     -e SKIP_INPUT="$SKIP_INPUT" \
+    -e SKIP_PASSWORD="$SKIP_INPUT" \
     -e SSH_KEY_PRIVATE="$SSH_KEY_PRIVATE" \
     -e SSH_KEY_PUBLIC="$SSH_KEY_PUBLIC" \
     -i -t \
