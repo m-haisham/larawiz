@@ -28,7 +28,7 @@ Optionally, you can set the following environment variable to skip input prompts
 1. Download and execute the script directly from GitHub:
 
    ```bash
-   sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/m-haisham/larawiz/v0.1.1/setup.sh)"
+   sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/m-haisham/larawiz/v0.1.2/setup.sh)"
    ```
 
 2. Follow the prompts to provide necessary inputs such as SSH key, GitHub repository URL, and domain name.
