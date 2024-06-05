@@ -28,7 +28,7 @@ Optionally, you can set the following environment variable to skip input prompts
 1. Download and execute the script directly from GitHub:
 
    ```bash
-   sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/m-haisham/larawiz/v0.1.2/setup.sh)"
+   sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/m-haisham/larawiz/v0.1.3/setup.sh)"
    ```
 
 2. Follow the prompts to provide necessary inputs such as SSH key, GitHub repository URL, and domain name.
@@ -55,8 +55,8 @@ The `doctor.sh` script helps diagnose and fix common issues with the Laravel app
 1. Download and replace any existing `doctor.sh` script:
 
    ```bash
-   sudo curl -o /usr/local/bin/doctor.sh https://raw.githubusercontent.com/m-haisham/larawiz/v0.1.2/doctor.sh
-   sudo chmod +x /usr/local/bin/doctor.sh
+   sudo curl -o doctor.sh https://raw.githubusercontent.com/m-haisham/larawiz/v0.1.3/doctor.sh
+   sudo chmod +x doctor.sh
    ```
 
 2. Execute the `doctor.sh` script:
