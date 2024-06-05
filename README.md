@@ -13,15 +13,15 @@ This script automates the setup process for a Laravel application on an Ubuntu s
 
 Before running the Larawiz script, ensure the following environment variables are set or provided as input during execution:
 
-- `ALERT_EMAIL`: Your email address for receiving alerts.
-- `LARAVEL_REPO_URL`: The URL of your Laravel application repository on GitHub.
-- `DOMAIN_NAME`: The domain name for configuring Nginx.
+- ALERT_EMAIL: Your email address for receiving alerts.
+- LARAVEL_REPO_URL: The URL of your Laravel application repository on GitHub.
+- DOMAIN_NAME: The domain name for configuring Nginx.
 
 Optionally, you can set the following environment variable to skip input prompts and use predefined values:
 
-- `SKIP_INPUT`: Set to "true" to skip input prompts.
-- `SSH_KEY_PRIVATE`: The private SSH key for accessing GitHub repositories.
-- `SSH_KEY_PUBLIC`: The public SSH key for accessing GitHub repositories.
+- SKIP_INPUT: Set to "true" to skip input prompts.
+- SSH_KEY_PRIVATE: The private SSH key for accessing GitHub repositories.
+- SSH_KEY_PUBLIC: The public SSH key for accessing GitHub repositories.
 
 ## Usage
 
@@ -46,10 +46,43 @@ Optionally, you can set the following environment variable to skip input prompts
 - Adds Laravel Scheduler to Crontab for running scheduled tasks.
 - Sets up basic Vim configuration for development purposes.
 
-## Notes
+## Doctor Script
 
-- Ensure that your server meets the specified requirements before running the script.
-- The script assumes a fresh Ubuntu server setup. Running it on an existing server may overwrite existing configurations.
+The `doctor.sh` script helps diagnose and fix common issues with the Laravel application setup. It checks for the presence of required dependencies, verifies configurations, and ensures that services are running correctly.
+
+### Usage
+
+1. Download and replace any existing `doctor.sh` script:
+
+   ```bash
+   sudo curl -o /usr/local/bin/doctor.sh https://raw.githubusercontent.com/m-haisham/larawiz/v0.1.2/doctor.sh
+   sudo chmod +x /usr/local/bin/doctor.sh
+   ```
+
+2. Execute the `doctor.sh` script:
+
+   ```bash
+   sudo doctor.sh
+   ```
+
+The script will:
+
+- Verify the installation of essential commands.
+- Check PHP version and required extensions.
+- Validate Nginx configuration and ensure the service is running.
+- Ensure the PHP-FPM service is running
+- Verify Supervisor service status
+- Check UFW status and display rules.
+- Validate the presence and validity of SSL certificates.
+- Verify the existence of the Laravel `.env` file.
+- Check permissions of the `storage` and `bootstrap/cache` directories.
+- Ensure the Supervisor configuration for Laravel queues exists.
+- Display the server's IP address.
+
+### Notes
+
+- The script assumes the current folder contains the Laravel project if `composer.json` is present. It uses the folder name as `DOMAIN_NAME` and the current folder as `PROJECT_FOLDER`.
+- If `composer.json` is not found, the script will prompt you to enter `DOMAIN_NAME` and `PROJECT_FOLDER`.
 
 ## License
 
