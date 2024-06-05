@@ -35,16 +35,16 @@ Optionally, you can set the following environment variable to skip input prompts
 
 ## What Does This Script Do?
 
-- Updates and upgrades the system
-- Installs required dependencies (Nginx, Git, Composer, PHP 8.3, Supervisor, Certbot, Npm)
-- Creates a new user and sets up SSH key authentication
-- Clones the Laravel project from the specified GitHub repository
-- Installs Laravel dependencies using Composer
-- Configures Nginx to serve the Laravel application
-- Sets up Supervisor to manage Laravel queues
-- Adds Laravel Scheduler to Crontab for scheduled tasks
-- Obtains and installs SSL certificates using Certbot
-- Sets up basic Vim configuration for development
+- Updates and upgrades the system.
+- Installs necessary dependencies like Nginx, Git, Composer, PHP 8.3, Supervisor, Certbot, and Npm.
+- Creates a new user named 'it' and sets up SSH key authentication for GitHub access.
+- Clones the Laravel project from the specified GitHub repository.
+- Installs Laravel dependencies using Composer.
+- Configures Nginx to serve the Laravel application.
+- Obtains and installs SSL certificates using Certbot for secure HTTPS connection.
+- Sets up Supervisor to manage Laravel queues, ensuring efficient queue processing.
+- Adds Laravel Scheduler to Crontab for running scheduled tasks.
+- Sets up basic Vim configuration for development purposes.
 
 ## Notes
 

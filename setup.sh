@@ -68,13 +68,17 @@ prompt "Enter your domain name for Nginx configuration" DOMAIN_NAME
 validate_input "Domain name" "DOMAIN_NAME"
 
 PROJECT_FOLDER="/var/www/$DOMAIN_NAME"
+GITHUB_HOST="github.com"
+KNOWN_HOSTS_FILE="/home/it/.ssh/known_hosts"
 
 echo "Updating and upgrading the system..."
 sudo apt update -y
 sudo apt upgrade -y
 
 echo "Installing required dependencies..."
-sudo apt install -y curl openssl nginx git unzip software-properties-common supervisor python3-certbot-nginx ufw iproute2 cron systemd
+sudo apt install -y \
+    curl openssl nginx git unzip software-properties-common \
+    supervisor certbot python3-certbot-nginx ufw iproute2 cron systemd
 
 # Check if user 'it' exists
 if id "it" &>/dev/null; then
@@ -85,14 +89,14 @@ else
     sudo adduser --disabled-password --gecos "" it
 
     # Set the password for the 'it' user
-    if [[ "${SKIP_INPUT,,}" != "true" ]]; then
+    if [[ "${SKIP_PASSWORD,,}" != "true" ]]; then
         IT_PASSWORD=$(openssl rand -base64 12 | tr -dc '[:alnum:]!@#$%^&*()_+-=' | head -c 12)
         echo "it:$IT_PASSWORD" | sudo chpasswd
         echo "Password for user 'it' is: $IT_PASSWORD"
     fi
 
-    # Add 'it' user to the sudo group
-    sudo usermod -aG sudo it
+    # Add 'it' user to the www group
+    # sudo usermod -aG sudo it
     sudo usermod -aG www-data it
 
     # Flag indicating 'it' user has just been created
@@ -120,29 +124,29 @@ if [ "$JUST_CREATED_IT" = true ]; then
     fi
 fi
 
+if command -v php >/dev/null 2>&1; then
+    installed_version=$(php -v | head -n 1 | awk '{print $2}')
+    echo "PHP version $installed_version is installed."
+    if [[ "$installed_version" != "8.3"* ]]; then
+        echo "Another version of PHP is installed. Please uninstall the current PHP version first:"
+        echo "    sudo apt remove --purge php*"
+        echo "    sudo apt autoremove"
+        echo "    sudo apt autoclean"
+        exit 1
+    fi
+else
+    echo "No PHP installation detected. Proceeding with PHP 8.3 installation..."
+fi
+
 echo "Setting up firewall with UFW..."
 sudo ufw allow OpenSSH
 sudo ufw allow 'Nginx Full'
 sudo ufw --force enable
 
-# if command -v php8.3 >/dev/null 2>&1; then
-#     installed_version=$(php -v | head -n 1 | awk '{print $2}')
-#     echo "PHP version $installed_version is installed."
-#     if [[ "$installed_version" != "8.3"* ]]; then
-#         echo "Another version of PHP is installed. Please uninstall the current PHP version first:"
-#         echo "    sudo apt remove --purge php*"
-#         echo "    sudo apt autoremove"
-#         echo "    sudo apt autoclean"
-#         exit 1
-#     fi
-# else
-#     echo "No PHP installation detected. Proceeding with PHP 8.3 installation..."
-# fi
-
 # Install PHP 8.3
 if ! command -v php8.3 >/dev/null 2>&1; then
     echo "Adding PHP repository and installing PHP 8.3 and extensions..."
-    sudo add-apt-repository ppa:ondrej/php -y
+    LC_ALL=C.UTF-8 sudo add-apt-repository ppa:ondrej/php -y
     sudo apt update -y
     sudo apt install -y php8.3 php8.3-cli php8.3-fpm php8.3-mysql php8.3-xml php8.3-mbstring php8.3-curl php8.3-zip php8.3-bcmath php8.3-intl
     sudo update-alternatives --set php /usr/bin/php8.3
@@ -150,43 +154,35 @@ else
     echo "PHP 8.3 is already installed."
 fi
 
-# Install Certbot if not installed
-if ! command -v certbot >/dev/null 2>&1; then
-    echo "Installing Certbot..."
-    sudo -u it apt install -y certbot
-else
-    echo "Certbot is already installed."
-fi
-
 # Check if Composer is installed
 if ! command -v composer >/dev/null 2>&1; then
     echo "Installing Composer..."
     sudo -u it curl -sS https://getcomposer.org/installer | sudo -u it php
-    sudo -u it mv composer.phar /usr/local/bin/composer
+    sudo mv composer.phar /usr/local/bin/composer
+    sudo chmod +x /usr/local/bin/composer
+    sudo chown it:it /usr/local/bin/composer
 else
     echo "Composer is already installed."
 fi
 
+# Delete composer.phar if it exists
+[ -f "composer.phar" ] && rm composer.phar
+
 # Install NVM, npm, and Node.js
 if ! command -v nvm >/dev/null 2>&1; then
     echo "Installing NVM (Node Version Manager)..."
-    sudo -u it curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+    sudo -u it curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | sudo -u it bash
     echo "Copying NVM configuration to 'it' user..."
     sudo cp ~/.nvm /home/it/ -r
     sudo chown it:it /home/it/.nvm -R
     echo "Reloading bash to use NVM..."
-    export NVM_DIR="/home/it/.nvm"
-    [ -s "$NVM_DIR/nvm.sh" ] && sudo -u it . "$NVM_DIR/nvm.sh"
-    [ -s "$NVM_DIR/bash_completion" ] && sudo -u it . "$NVM_DIR/bash_completion"
 else
     echo "NVM (Node Version Manager) is already installed."
 fi
 
 if ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1; then
     echo "Installing the latest LTS version of Node.js and npm..."
-    sudo -u it nvm install --lts
-    sudo -u it nvm use --lts
-    sudo -u it nvm alias default node
+    sudo -u it bash -c "source ~/.nvm/nvm.sh; nvm install --lts; nvm use --lts; nvm alias default node"
 else
     echo "Node.js and npm are already installed."
 fi
@@ -222,6 +218,32 @@ else
     fi
 fi
 
+# Add GitHub to known_hosts if not already present for root user
+KNOWN_HOSTS_FILE="~/.ssh/known_hosts"
+if [ ! -f "$KNOWN_HOSTS_FILE" ] || ! grep -q "$GITHUB_HOST" "$KNOWN_HOSTS_FILE"; then
+    echo "Adding GitHub to known_hosts file at $KNOWN_HOSTS_FILE..."
+    ssh-keyscan -t ed25519 github.com | tee github-key-temp | ssh-keygen -lf -
+    cat github-key-temp >>"$KNOWN_HOSTS_FILE"
+fi
+
+# Add GitHub to known_hosts if not already present for 'it' user
+KNOWN_HOSTS_FILE="/home/it/.ssh/known_hosts"
+if [ ! -f "$KNOWN_HOSTS_FILE" ] || ! grep -q "$GITHUB_HOST" "$KNOWN_HOSTS_FILE"; then
+    echo "Adding GitHub to known_hosts file at $KNOWN_HOSTS_FILE..."
+    ssh-keyscan -t ed25519 github.com | tee github-key-temp | ssh-keygen -lf -
+    cat github-key-temp >>"$KNOWN_HOSTS_FILE"
+    sudo chown it:it "$KNOWN_HOSTS_FILE"
+fi
+
+# Cleanup known_hosts temporary file if it exists
+[ -f github-key-temp ] && rm github-key-temp
+
+echo "Creating the project folder..."
+sudo mkdir -p "$PROJECT_FOLDER"
+
+echo "Changing ownership of the project folder to 'it'..."
+sudo chown -R it:it "$PROJECT_FOLDER"
+
 echo "Cloning the Laravel project from GitHub..."
 sudo -u it git clone "$LARAVEL_REPO_URL" "$PROJECT_FOLDER"
 
@@ -229,16 +251,18 @@ echo "Installing Laravel dependencies..."
 cd "$PROJECT_FOLDER" && sudo -u it composer install --no-dev -o
 
 echo "Setting permissions for www-data..."
-sudo chown -R www-data:www-data "$PROJECT_FOLDER"
 sudo chmod -R 775 "$PROJECT_FOLDER/storage" "$PROJECT_FOLDER/bootstrap/cache"
+sudo chgrp -R www-data storage "$PROJECT_FOLDER/bootstrap/cache"
+sudo chmod -R ug+rwx storage "$PROJECT_FOLDER/bootstrap/cache"
 
 echo "Setting up environment file..."
 sudo cp "$PROJECT_FOLDER/.env.example" "$PROJECT_FOLDER/.env"
-sudo -u it sudo php "$PROJECT_FOLDER/artisan" key:generate
+sudo chown it:it "$PROJECT_FOLDER/.env"
+sudo -u it php "$PROJECT_FOLDER/artisan" key:generate
 
 echo "Configuring Nginx..."
 NGINX_CONF="/etc/nginx/sites-available/$DOMAIN_NAME"
-sudo -u it tee $NGINX_CONF >/dev/null <<EOL
+sudo tee $NGINX_CONF >/dev/null <<EOL
 server {
     listen 80;
     server_name $DOMAIN_NAME;
@@ -275,16 +299,20 @@ server {
     }
 }
 EOL
+sudo chown it:it $NGINX_CONF
 
 # Configuring Certbot for HTTPS...
-sudo -u it certbot --nginx -d $DOMAIN_NAME -n --agree-tos --email $ALERT_EMAIL
+if [[ "${SKIP_INPUT,,}" != "true" ]]; then
+    sudo certbot --nginx -d $DOMAIN_NAME -n --agree-tos --email $ALERT_EMAIL
+fi
 
 echo "Enabling Nginx site and restarting service..."
-sudo -u it ln -s $NGINX_CONF /etc/nginx/sites-enabled/
+sudo ln -s $NGINX_CONF /etc/nginx/sites-enabled/
+sudo chown -R it:it /etc/nginx/sites-enabled/$DOMAIN_NAME
 sudo -u it systemctl restart nginx
 
 echo "Configuring Supervisor for Laravel queues..."
-sudo -u it tee "/etc/supervisor/conf.d/$DOMAIN_NAME-queue.conf" >/dev/null <<EOL
+sudo tee "/etc/supervisor/conf.d/$DOMAIN_NAME-queue.conf" >/dev/null <<EOL
 [program:queue]
 process_name=%(program_name)s_%(process_num)02d
 command=cd $PROJECT_FOLDER && php artisan queue:work --sleep=3 --tries=3 --timeout=90
@@ -295,6 +323,7 @@ numprocs=1
 redirect_stderr=true
 stdout_logfile=$PROJECT_FOLDER/storage/logs/queue.log
 EOL
+sudo chown it:it "/etc/supervisor/conf.d/$DOMAIN_NAME-queue.conf"
 
 echo "Reloading Supervisor to apply new configuration..."
 sudo -u it supervisorctl reread
@@ -305,7 +334,8 @@ echo "Adding Laravel Scheduler to Crontab..."
 (
     crontab -l -u www-data 2>/dev/null
     echo "* * * * * cd $PROJECT_FOLDER && php artisan schedule:run >> /dev/null 2>&1"
-) | sudo -u it crontab -u www-data -
+    echo ""
+) | sudo crontab -u www-data -
 
 echo "Setting up basic Vim configuration..."
 sudo -u it mkdir -p /home/it/.vim/autoload /home/it/.vim/bundle

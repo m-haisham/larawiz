@@ -29,12 +29,13 @@ docker run --rm --name $CONTAINER_NAME \
     -e SKIP_PASSWORD="$SKIP_INPUT" \
     -e SSH_KEY_PRIVATE="$SSH_KEY_PRIVATE" \
     -e SSH_KEY_PUBLIC="$SSH_KEY_PUBLIC" \
+    -e DEBIAN_FRONTEND="noninteractive" \
     -i -t \
     $IMAGE bash -c "
     apt-get update -y && \
     apt-get -y install sudo adduser && \
     chmod +x $SETUP_SCRIPT_PATH && \
-    $SETUP_SCRIPT_PATH
+    bash $SETUP_SCRIPT_PATH
 "
 
 # Check the exit status of the Docker run command
