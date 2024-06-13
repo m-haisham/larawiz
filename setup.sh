@@ -208,7 +208,7 @@ else
 
     # Display the SSH key for the user to copy
     echo "SSH public key for GitHub:"
-    sudo -u it cat "$SSH_KEY_PUBLIC_FILE.pub"
+    sudo -u it cat "$SSH_KEY_PUBLIC_FILE"
     echo ""
 
     # Prompt the user to add the SSH key to GitHub
@@ -299,7 +299,6 @@ server {
     }
 }
 EOL
-sudo chown it:it $NGINX_CONF
 
 # Configuring Certbot for HTTPS...
 if [[ "${SKIP_INPUT,,}" != "true" ]]; then
