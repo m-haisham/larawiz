@@ -307,7 +307,6 @@ fi
 
 echo "Enabling Nginx site and restarting service..."
 sudo ln -s $NGINX_CONF /etc/nginx/sites-enabled/
-sudo chown -R it:it /etc/nginx/sites-enabled/$DOMAIN_NAME
 sudo -u it systemctl restart nginx
 
 echo "Configuring Supervisor for Laravel queues..."
@@ -322,12 +321,10 @@ numprocs=1
 redirect_stderr=true
 stdout_logfile=$PROJECT_FOLDER/storage/logs/queue.log
 EOL
-sudo chown it:it "/etc/supervisor/conf.d/$DOMAIN_NAME-queue.conf"
-
 echo "Reloading Supervisor to apply new configuration..."
-sudo -u it supervisorctl reread
-sudo -u it supervisorctl update
-sudo -u it supervisorctl start queue:*
+sudo supervisorctl reread
+sudo supervisorctl update
+sudo supervisorctl start queue:*
 
 echo "Adding Laravel Scheduler to Crontab..."
 (
