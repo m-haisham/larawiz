@@ -29,6 +29,8 @@
 #   This script must be run with root privileges.
 ###############################################################################
 
+SKIP_INPUT=$(echo "$SKIP_INPUT" | tr '[:upper:]' '[:lower:]')
+
 # Ensure the script is run with sudo
 if [ "$EUID" -ne 0 ]; then
     echo "This script requires root privileges to install packages and configure system settings."
@@ -38,7 +40,7 @@ fi
 
 # Function to prompt for input or use environment variable
 prompt() {
-    if [[ "${SKIP_INPUT,,}" != "true" ]]; then
+    if [[ $SKIP_INPUT = "true" ]]; then
         return 0
     fi
 
@@ -212,7 +214,7 @@ else
 
     # Prompt the user to add the SSH key to GitHub
     echo "Add this key to your GitHub account: https://github.com/settings/keys"
-    if [[ "${SKIP_INPUT,,}" != "true" ]]; then
+    if [[ $SKIP_INPUT = "true" ]]; then
         read -p "Press [Enter] after adding the SSH key to GitHub..."
     fi
 fi
@@ -298,7 +300,7 @@ server {
 EOL
 
 # Configuring Certbot for HTTPS...
-if [[ "${SKIP_INPUT,,}" != "true" ]]; then
+if [[ $SKIP_INPUT = "true" ]]; then
     sudo certbot --nginx -d $DOMAIN_NAME -n --agree-tos --email $ALERT_EMAIL
 fi
 
