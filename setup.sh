@@ -95,8 +95,8 @@ else
         echo "Password for user 'it' is: $IT_PASSWORD"
     fi
 
-    # Add 'it' user to the www group
-    # sudo usermod -aG sudo it
+    # Add 'it' user to the sudo and www-data group
+    sudo usermod -aG sudo it
     sudo usermod -aG www-data it
 
     # Flag indicating 'it' user has just been created
