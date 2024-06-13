@@ -160,7 +160,6 @@ if ! command -v composer >/dev/null 2>&1; then
     sudo -u it curl -sS https://getcomposer.org/installer | sudo -u it php
     sudo mv composer.phar /usr/local/bin/composer
     sudo chmod +x /usr/local/bin/composer
-    sudo chown it:it /usr/local/bin/composer
 else
     echo "Composer is already installed."
 fi
