@@ -304,9 +304,12 @@ if [[ "${SKIP_INPUT,,}" != "true" ]]; then
     sudo certbot --nginx -d $DOMAIN_NAME -n --agree-tos --email $ALERT_EMAIL
 fi
 
+# Unlink the default nginx config
+sudo unlink /etc/nginx/sites-enabled/default
+
 echo "Enabling Nginx site and restarting service..."
 sudo ln -s $NGINX_CONF /etc/nginx/sites-enabled/
-sudo -u it systemctl restart nginx
+sudo systemctl restart nginx
 
 echo "Configuring Supervisor for Laravel queues..."
 sudo tee "/etc/supervisor/conf.d/$DOMAIN_NAME-queue.conf" >/dev/null <<EOL
