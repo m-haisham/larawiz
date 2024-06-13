@@ -264,35 +264,33 @@ NGINX_CONF="/etc/nginx/sites-available/$DOMAIN_NAME"
 sudo tee $NGINX_CONF >/dev/null <<EOL
 server {
     listen 80;
+    listen [::]:80;
     server_name $DOMAIN_NAME;
     root $PROJECT_FOLDER/public;
 
     add_header X-Frame-Options "SAMEORIGIN";
-    add_header X-XSS-Protection "1; mode=block";
     add_header X-Content-Type-Options "nosniff";
-
+ 
     index index.php;
-
+ 
     charset utf-8;
-
+ 
     location / {
-        try_files \$uri \$uri/ /index.php?\$query_string;
+        try_files $uri $uri/ /index.php?$query_string;
     }
-
+ 
     location = /favicon.ico { access_log off; log_not_found off; }
     location = /robots.txt  { access_log off; log_not_found off; }
-
+ 
     error_page 404 /index.php;
-
+ 
     location ~ \.php$ {
         fastcgi_pass unix:/var/run/php/php8.3-fpm.sock;
-        fastcgi_param SCRIPT_FILENAME \$realpath_root\$fastcgi_script_name;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
         include fastcgi_params;
-        fastcgi_intercept_errors on;
-        fastcgi_buffer_size 16k;
-        fastcgi_buffers 4 16k;
+        fastcgi_hide_header X-Powered-By;
     }
-
+ 
     location ~ /\.(?!well-known).* {
         deny all;
     }
@@ -304,10 +302,8 @@ if [[ "${SKIP_INPUT,,}" != "true" ]]; then
     sudo certbot --nginx -d $DOMAIN_NAME -n --agree-tos --email $ALERT_EMAIL
 fi
 
-# Unlink the default nginx config
-sudo unlink /etc/nginx/sites-enabled/default
-
 echo "Enabling Nginx site and restarting service..."
+sudo unlink /etc/nginx/sites-enabled/default
 sudo ln -s $NGINX_CONF /etc/nginx/sites-enabled/
 sudo systemctl restart nginx
 
