@@ -214,7 +214,7 @@ else
 
     # Prompt the user to add the SSH key to GitHub
     echo "Add this key to your GitHub account: https://github.com/settings/keys"
-    if [[ $SKIP_INPUT = "true" ]]; then
+    if [[ $SKIP_INPUT != "true" ]]; then
         read -p "Press [Enter] after adding the SSH key to GitHub..."
     fi
 fi
