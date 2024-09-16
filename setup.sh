@@ -159,7 +159,7 @@ fi
 # Check if Composer is installed
 if ! command -v composer >/dev/null 2>&1; then
     echo "Installing Composer..."
-    sudo -u it curl https://getcomposer.org/installer -o composer.phar | sudo -u it php
+    sudo -u it curl -sS https://getcomposer.org/installer | sudo -u it php
     sudo mv composer.phar /usr/local/bin/composer
     sudo chmod +x /usr/local/bin/composer
 else
