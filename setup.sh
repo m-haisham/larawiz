@@ -339,7 +339,7 @@ sudo -u it curl -LSso /home/it/.vim/autoload/pathogen.vim https://tpo.pe/pathoge
 sudo -u it curl -LSso /home/it/.vimrc https://raw.githubusercontent.com/amix/vimrc/master/vimrcs/basic.vim
 
 # Detect and set the server IP address
-SERVER_IP_ADDRESS=$(ip route get 1 | awk '{print $NF;exit}')
+SERVER_IP_ADDRESS=$(curl -sSL icanhazip.com)
 
 # Instructions for the user
 echo "Setup complete. Your Laravel application is ready."
